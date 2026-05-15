@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\Staff; // ✅ Staff મોડલ ઉમેર્યું છે
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // ✅ આ જરૂરી છે
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -17,13 +18,16 @@ class DashboardController extends Controller
             'total_invoices'  => Invoice::count(),
             'total_revenue'   => Invoice::where('status', 'paid')->sum('total'),
             'pending_count'   => Invoice::where('status', 'pending')->count(),
-            'recent_invoices' => Invoice::with('client')->latest()->take(5)->get()
+            'recent_invoices' => Invoice::with('client')->latest()->take(5)->get(),
+            
+            // HR Staff નું કાઉન્ટ અહીં એડ કર્યું છે 👇
+            'hr_staff_count'  => Staff::count(), 
         ];
 
         return view('dashboard', $data);
     }
 
-    // ૨. લોગિન પ્રોસેસ કરવા માટે (જો તમે Custom Login વાપરતા હોવ)
+    // ૨. લોગિન પ્રોસેસ કરવા માટે
     public function handleLogin(Request $request) 
     {
         $credentials = $request->only('email', 'password');
