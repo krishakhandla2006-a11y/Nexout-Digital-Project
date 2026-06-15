@@ -24,7 +24,7 @@
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         
-        <a href="/clients" class="group block transition transform hover:scale-105">
+        <a href="{{ route('clients.index') }}" class="group block transition transform hover:scale-105">
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center h-full group-hover:shadow-md transition-shadow">
                 <div class="p-3 bg-blue-100 rounded-lg mr-4">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -36,7 +36,7 @@
             </div>
         </a>
 
-        <a href="/dashboard" class="group block transition transform hover:scale-105">
+        <a href="{{ route('dashboard') }}" class="group block transition transform hover:scale-105">
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center h-full group-hover:shadow-md transition-shadow">
                 <div class="p-3 bg-green-100 rounded-lg mr-4">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -73,42 +73,76 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-5 md:p-6 border-b border-gray-50 flex justify-between items-center">
             <h3 class="font-bold text-gray-700 text-sm md:text-base">Recent Invoices</h3>
-            <a href="/invoice/create" class="text-xs md:text-sm text-blue-600 font-semibold hover:underline">Create New +</a>
+            <a href="{{ route('invoice.create') }}" class="text-xs md:text-sm text-blue-600 font-semibold hover:underline">Create New +</a>
         </div>
         
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[600px] md:min-w-full">
+            <table class="w-full text-left border-collapse min-w-[650px] md:min-w-full">
                 <thead class="bg-gray-50 text-gray-600 text-xs md:text-sm uppercase">
                     <tr>
-                        <th class="p-4 font-semibold">Invoice No</th> {{-- ID na badle Invoice No --}}
+                        <th class="p-4 font-semibold">Invoice No</th>
                         <th class="p-4 font-semibold">Date</th>
                         <th class="p-4 font-semibold">Client</th>
                         <th class="p-4 font-semibold">Amount</th>
                         <th class="p-4 font-semibold">Status</th>
-                        <th class="p-4 font-semibold text-center">Action</th>
+                        <th class="p-4 font-semibold text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 text-gray-700 text-sm">
                     @forelse($recent_invoices as $inv)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="p-4 font-bold text-blue-600">#{{ $inv->invoice_no }}</td> {{-- # sathe invoice no --}}
+                        <td class="p-4 font-bold text-blue-600">#{{ $inv->invoice_no }}</td>
                         <td class="p-4 text-gray-500">
-                            {{ \Carbon\Carbon::parse($inv->created_at)->format('d M, Y') }}
+                            {{ \Carbon\Carbon::parse($inv->invoice_date ?? $inv->created_at)->format('d M, Y') }}
                         </td>
                         <td class="p-4 font-medium text-gray-900">{{ $inv->client->name }}</td>
                         <td class="p-4">
                             <div class="font-bold text-gray-800">₹{{ number_format($inv->total, 2) }}</div>
-                            <div class="text-[10px] text-gray-400 italic">Rupees Only</div> {{-- Rupees Only added --}}
+                            <div class="text-[10px] text-gray-400 italic">Rupees Only</div>
                         </td>
                         <td class="p-4">
                             <span class="px-2 py-1 rounded-full text-[10px] md:text-xs font-bold {{ $inv->status == 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
                                 {{ strtoupper($inv->status) }}
                             </span>
                         </td>
-                        <td class="p-4 text-center text-gray-400">
-                            <a href="/invoice/pdf/{{ $inv->id }}" class="hover:text-blue-600 transition-colors inline-block p-1">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            </a>
+
+                        {{-- ✅ Actions: Download + Edit + Delete --}}
+                        <td class="p-4">
+                            <div class="flex items-center justify-center gap-2">
+
+                                {{-- Download PDF --}}
+                                <a href="{{ route('invoice.pdf', $inv->id) }}"
+                                   title="Download PDF"
+                                   class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </a>
+
+                                {{-- ✅ Edit Button --}}
+                                <a href="{{ route('invoice.edit', $inv->id) }}"
+                                   title="Edit Invoice"
+                                   class="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+
+                                {{-- ✅ Delete Button --}}
+                                <form action="{{ route('invoice.destroy', $inv->id) }}" method="POST"
+                                      onsubmit="return confirm('Are you sure you want to delete this invoice?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            title="Delete Invoice"
+                                            class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+
+                            </div>
                         </td>
                     </tr>
                     @empty

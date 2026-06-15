@@ -32,8 +32,6 @@ Route::get('/logout', function () {
 
 // ================= PROTECTED =================
 
-// 👉 manual check inside route
-
 Route::get('/', function () {
     return redirect('/dashboard');
 });
@@ -45,16 +43,19 @@ Route::get('/dashboard', function () {
     return app(DashboardController::class)->index();
 })->name('dashboard');
 
-// Clients
+// ================= CLIENTS =================
 Route::resource('clients', ClientController::class);
 
-// Invoice
-Route::get('/invoice/create', [InvoiceController::class, 'create']);
-Route::post('/invoice/store', [InvoiceController::class, 'store']);
-Route::get('/invoice/paid/{id}', [InvoiceController::class, 'paid']);
-Route::get('/invoice/pdf/{id}', [InvoiceController::class, 'download']);
+// ================= INVOICE (ALL NAMED ROUTES) =================
+Route::get('/invoice/create', [InvoiceController::class, 'create'])->name('invoice.create');
+Route::post('/invoice/store', [InvoiceController::class, 'store'])->name('invoice.store');
+Route::get('/invoice/{id}/edit', [InvoiceController::class, 'edit'])->name('invoice.edit');
+Route::put('/invoice/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
+Route::delete('/invoice/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
+Route::get('/invoice/paid/{id}', [InvoiceController::class, 'paid'])->name('invoice.paid');
+Route::get('/invoice/pdf/{id}', [InvoiceController::class, 'download'])->name('invoice.pdf');
 
-// Profile
+// ================= PROFILE =================
 Route::get('/profile', function () {
     if (!session()->has('user')) {
         return redirect('/login');

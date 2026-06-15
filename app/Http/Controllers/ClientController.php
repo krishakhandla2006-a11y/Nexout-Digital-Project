@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 
 class ClientController extends Controller
 {
-    
     public function index()
     {
         $clients = Client::all();
@@ -21,7 +21,6 @@ class ClientController extends Controller
 
     public function store(Request $req)
     {
-        // વેલિડેશનમાં નવા ફિલ્ડ્સ ઉમેર્યા છે
         $req->validate([
             'name'           => 'required',
             'phone'          => 'required',
@@ -32,7 +31,6 @@ class ClientController extends Controller
             'ifsc_code'      => 'nullable',
         ]);
 
-        // $req->all() વાપરવાથી બધા ફિલ્ડ્સ ઓટોમેટિક સેવ થઈ જશે
         Client::create($req->all());
 
         return redirect()->route('clients.index')->with('success', 'Client added successfully!');
@@ -46,7 +44,6 @@ class ClientController extends Controller
 
     public function update(Request $req, $id)
     {
-        // અપડેટ વખતે પણ વેલિડેશન જરૂરી છે
         $req->validate([
             'name'           => 'required',
             'phone'          => 'required',
@@ -66,7 +63,14 @@ class ClientController extends Controller
     public function destroy($id)
     {
         $client = Client::findOrFail($id);
-        $client->delete();
+
+        try {
+            $client->delete();
+        } catch (QueryException $e) {
+            // Jo client par invoices/related records hoy to delete fail thase
+            return redirect()->route('clients.index')
+                ->with('error', 'This client cannot be deleted because it has related invoices. Please delete those invoices first.');
+        }
 
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully!');
     }
